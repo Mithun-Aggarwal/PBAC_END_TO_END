@@ -1,0 +1,47 @@
+# Python specific
+__pycache__/
+*.pyc
+*.pyd
+.Python
+venv/
+
+# Node.js specific
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+build/
+dist/
+target/
+*.log
+*.tmp
+*.bak
+*.swp
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.idea/
+.vscode/
+
+# Environment variables and sensitive files
+.env
+# If you have specific generated report folders
+# reports/
+
+# folders
+# folders (relative to the repository root) - CORRECTED
+/Back_up_1/
+/Chatbot/
+/extraction_logic/
+/FINAL_DOWNLOAD_PBAC/
+/FINAL_DOWNLOAD_PBAC_HTML/
+/Main Ideas/
+/output_folder/
+/PBAC_SMALL_TESTING_DATA/
+/PBAC_SMALLEST_DATA/
+/phase_0_data/
+/phase_0_output/
