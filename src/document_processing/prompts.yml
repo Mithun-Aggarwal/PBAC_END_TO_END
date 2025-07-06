@@ -1,0 +1,205 @@
+# FILE: src/document_processing/prompts.yml
+# Kilo-Architect - Centralized Prompt Manifest V2.4 (Conciseness Rule Added)
+
+# --- V2 REPAIR PROMPT ---
+json_repair_v2:
+  name: "Structured JSON Repair for Auditable Schema"
+  version: 2.0
+  # ... (template unchanged)
+  description: "Instructs an LLM to correct a faulty JSON response to match a complex, nested schema."
+  template: |
+    You are a JSON repair and validation specialist. Your task is to correct a faulty JSON string provided by another AI to ensure it strictly conforms to the required nested schema. Do not change the underlying data or analysis; only fix the structure, keys, and values to match the target schema perfectly.
+    **Original Text to Analyze:**
+    <INPUT_CHUNK>
+    {chunk_text}
+    </INPUT_CHUNK>
+    **Target JSON Schema (MUST BE FOLLOWED):**
+    {{
+      "semantic_purpose": {{"value": "...", "justification": "..."}},
+      "persona_relevance_scores": {{
+        "clinical_analyst": {{"score": 0.0, "justification": "..."}},
+        "health_economist": {{"score": 0.0, "justification": "..."}},
+        "regulatory_specialist": {{"score": 0.0, "justification": "..."}}
+      }},
+      "typed_entities": [
+        {{"name": "...", "type": "..."}}
+      ],
+      "quality_assessment": {{"confidence": 1.0, "is_ambiguous": false, "justification": "..."}}
+    }}
+    **The previous AI produced this faulty response:**
+    <FAULTY_RESPONSE>
+    {faulty_response}
+    </FAULTY_RESPONSE>
+    **Error Details:**
+    Validation failed with the following error: {error_message}
+    **Your Task:**
+    Analyze the original <INPUT_CHUNK> and the <FAULTY_RESPONSE>. Based on the data, regenerate a corrected JSON object that is fully compliant with the target schema. Output ONLY the minified, corrected JSON object. Do not add any other text.
+
+# ==============================================================================
+# PASS 2: SEMANTIC ANALYSIS PROMPTS
+# ==============================================================================
+global_metadata_v1:
+  # ... (template unchanged) ...
+  description: "Extracts high-level global metadata with a high degree of accuracy and structured justification."
+  template: |
+    # PERSONA: You are an elite analytical AI designated 'Metis-Alpha'. Your specialization is rapid, high-accuracy analysis of complex regulatory and health technology assessment (HTA) documents for bodies like the PBAC. Your work is trusted for its precision.
+    ## MISSION:
+    Perform a high-level metadata extraction from the initial pages of a new HTA submission provided below.
+    ## CORE PRINCIPLES:
+    1.  **Verbatim Extraction:** Extract values verbatim from the text.
+    2.  **Null on Absence:** If information is NOT present, its `"value"` key MUST be JSON `null`.
+    3.  **Justification is Citation:** The `"justification"` MUST be a brief, direct explanation.
+    4.  **Confidence is Certainty:** 1.0 for explicit text, <1.0 for inference.
+    ## OUTPUT FORMAT:
+    Your output MUST be a single, raw, syntactically perfect JSON object. Do not include markdown fences (```json) or other text.
+    ### High-Quality Example:
+    {{
+      "doc_title": {{"value": "Public Summary Document – July 2024 PBAC Meeting", "confidence": 1.0, "justification": "Extracted from the document header."}},
+      "drug_name": {{"value": "esketamine", "confidence": 1.0, "justification": "Appears in section 7.01 heading."}},
+      "indication": {{"value": "treatment-resistant depression (TRD)", "confidence": 0.9, "justification": "Defined in section 1.1."}},
+      "sponsor": {{"value": "Janssen-Cilag Pty Ltd.", "confidence": 1.0, "justification": "Listed under product name."}}
+    }}
+    ## ANALYTICAL TASK:
+    [DOCUMENT EXCERPT]
+    ---
+    {context_text}
+    ---
+
+toc_inference_v1:
+  # ... (template unchanged) ...
+  description: "Parses unstructured text from a 'Contents' page into a structured list of ToC entries."
+  template: |
+    # PERSONA: You are 'Librarian-AI', a specialist in document structure recognition.
+    # MISSION: Analyze the provided text, which appears to be from a Table of Contents page. Your task is to extract all section titles and their corresponding page numbers.
+    ## CORE PRINCIPLES:
+    1.  **Structure is Key:** Parse each line that represents a ToC entry. Ignore irrelevant text.
+    2.  **Infer Levels:** Determine the hierarchical level (e.g., 1 for main sections, 2 for subsections) based on indentation or numbering. Assume the highest level is 1.
+    3.  **Strict Typing:** Page numbers must be integers. Levels must be integers. Text must be a string.
+    ## ABSOLUTE OUTPUT FORMAT:
+    Your output MUST be a single, raw JSON array of objects, starting with `[` and ending with `]`.
+    DO NOT wrap the list in a parent JSON object or markdown fences.
+    ### High-Quality Example of Perfect Output:
+    [
+      {{"level": 1, "text": "Introduction", "page": 1}},
+      {{"level": 1, "text": "Principles for using this glossary", "page": 2}},
+      {{"level": 1, "text": "Glossary", "page": 3}}
+    ]
+    ## ANALYTICAL TASK:
+    [DOCUMENT TEXT]
+    ---
+    {context_text}
+    ---
+
+table_summary_v1:
+  # ... (template unchanged) ...
+  description: "Generates a one-sentence summary of a table's content."
+  template: |
+    # PERSONA: You are a specialist data synthesis AI.
+    # MISSION: Analyze the provided table in Markdown format. Generate a single, concise sentence that explains its core purpose.
+    # OUTPUT FORMAT: Respond ONLY with a valid JSON object.
+    {{ "summary": "A one-sentence summary of the table." }}
+    # ANALYTICAL TASK:
+    [TABLE MARKDOWN]
+    ---
+    {context_text}
+    ---
+
+json_repair_v1:
+  # ... (template unchanged) ...
+  name: "Simple JSON Repair"
+  version: 1.0
+  description: "A simple prompt to fix malformed JSON, often by just re-wrapping it correctly."
+  template: |
+    You are a JSON repair utility. The previous AI response was invalid. Your task is to correct it.
+    The original request was to extract structured data from the following text:
+    ---
+    {context_text}
+    ---
+    The AI produced this faulty response:
+    ---
+    {faulty_response}
+    ---
+    The error was: {error_message}
+    Please correct the response and provide ONLY the valid, minified JSON object.
+
+economic_analysis_v1:
+  # ... (template unchanged) ...
+  description: "Extracts key data points from an economic analysis section of a regulatory submission."
+  template: |
+    # PERSONA: You are a senior health economist AI trained on HTA and PBAC documentation.
+    # MISSION: Analyze the following text excerpt. Extract the specified data points into a structured JSON object.
+    # OUTPUT FORMAT: Respond ONLY with a valid JSON object matching this schema.
+    {{
+      "icer": "string",
+      "model_type": "string",
+      "comparators": ["string"],
+      "pbac_critiques": ["string"]
+    }}
+    # ANALYTICAL TASK:
+    [CONTEXT TEXT]
+    ---
+    {context_text}
+    ---
+
+# === V9 ENRICHMENT PROMPT (EXPERT REFINEMENT) ===
+chunk_enrichment_v9:
+  name: "Precision-Tuned Auditable Knowledge Extraction"
+  version: 9.0
+  description: "V9 is a final refinement that adds an explicit, example-driven rule for entity extraction to prevent partial matches and formalizes the schema definition for maximum clarity."
+  template: |
+    <ROLE>
+    You are a specialized, automated Regulatory Document Analysis Sub-system. Your sole function is to process the <INPUT_CHUNK> and return a single, minified, valid JSON object that strictly adheres to the schema defined in <OUTPUT_SCHEMA_DEFINITION>.
+    </ROLE>
+
+    <CONTEXT>
+    - Document Title: {doc_title}
+    - Section Path: {section_path}
+    </CONTEXT>
+
+    <INPUT_CHUNK>
+    {chunk_text}
+    </INPUT_CHUNK>
+
+    <CRITICAL_PROCESSING_RULES>
+    1.  **JSON Output ONLY:** Your entire response must be the minified JSON object and nothing else.
+    2.  **Evidence is Mandatory:** Every `justification` MUST be a single, brief sentence directly supported by evidence from the <INPUT_CHUNK>.
+    3.  **Calibrate Confidence:** High confidence (>0.9) requires direct, unambiguous evidence. Vague or inferred evidence requires a lower confidence score.
+    4.  **Controlled Vocabulary:** For `semantic_purpose.value` and `typed_entities.type`, you MUST use one of the exact string values from the lists provided in the schema definition.
+    5.  **Entity Specificity Rule:** You MUST extract the full, specific named entity. For a company, extract 'Novartis Pharmaceuticals Pty Ltd', not 'Novartis' or 'Pty Ltd'. For a drug, extract the full name mentioned. Avoid generic terms. If no specific entities are present, the `typed_entities` array MUST be empty (`[]`).
+    </CRITICAL_PROCESSING_RULES>
+
+    <OUTPUT_SCHEMA_DEFINITION>
+    # You MUST generate a JSON object that conforms exactly to the following structure and its comments.
+    {{
+      "semantic_purpose": {{
+        "value": "string", // MUST be one of: ["Background/Context", "Drug/Therapy Description", "Clinical Trial Design", "Efficacy Results", "Safety/Adverse Events", "Pharmacoeconomic Analysis", "Dosage and Administration", "Regulatory History", "PBAC Recommendation", "Sponsor's Justification", "Stakeholder Commentary", "Miscellaneous"]
+        "confidence": "float", // Range: 0.0 to 1.0
+        "justification": "string" // Single, brief sentence explaining choice.
+      }},
+      "persona_relevance_scores": {{
+        "clinical_analyst": {{ // Focus: trial design, efficacy, safety, endpoints
+          "score": "float", // Range: 0.0 to 1.0
+          "justification": "string" // Single, brief sentence.
+        }},
+        "health_economist": {{ // Focus: cost, QALYs, pricing
+          "score": "float", // Range: 0.0 to 1.0
+          "justification": "string" // Single, brief sentence.
+        }},
+        "regulatory_specialist": {{ // Focus: recommendations, restrictions, approvals
+          "score": "float", // Range: 0.0 to 1.0
+          "justification": "string" // Single, brief sentence.
+        }}
+      }},
+      "typed_entities": [ // Array of objects. Return [] if no entities found.
+        {{
+          "name": "string", // The full, extracted entity name.
+          "type": "string" // MUST be one of: ["DRUG", "THERAPEUTIC_CLASS", "TRIAL_ACRONYM", "SPONSOR", "INDICATION", "MECHANISM_OF_ACTION", "ENDPOINT", "REGULATORY_BODY"]
+        }}
+      ],
+      "quality_assessment": {{
+        "confidence": "float", // Overall confidence in the analysis. Range: 0.0 to 1.0
+        "is_ambiguous": "boolean", // true if text is unclear, contradictory, or lacks detail.
+        "justification": "string" // If ambiguous, explain why. Else, state "Analysis is unambiguous."
+      }}
+    }}
+    </OUTPUT_SCHEMA_DEFINITION>

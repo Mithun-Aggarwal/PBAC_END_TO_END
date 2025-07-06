@@ -1,0 +1,66 @@
+# FILE: config.yml
+# Kilo-Architect - System Configuration V2.1
+
+# --- V7.2 NEW SECTION ---
+# This section contains tunable parameters for the deconstruction module,
+# allowing for fine-tuning of heuristics without changing code.
+deconstruction_configs:
+  # The page threshold for identifying repetitive headers and footers.
+  # A value of 0.6 means a piece of text must appear on at least 60% of
+  # the document's pages to be considered a candidate.
+  # Lowering this may help catch footers in shorter documents.
+  footer_header_page_threshold: 0.6
+
+
+# --- Adaptive Chunking Rules ---
+# Rules are applied in order. The first match is used.
+adaptive_chunking_rules:
+  # Rule 1: Dense, Factual Sections
+  # Smaller chunks improve retrieval precision for fact-based queries.
+  - keywords:
+      - "results"
+      - "data"
+      - "table"
+      - "figure"
+      - "methods"
+      - "methodology"
+      - "pharmacoeconomic"
+      - "cost-effectiveness"
+      - "safety"
+      - "adverse events"
+      - "statistics"
+    chunk_size: 512
+    overlap: 100
+
+  # Rule 2: Narrative, Contextual Sections
+  # Larger chunks preserve narrative flow for conceptual questions.
+  - keywords:
+      - "introduction"
+      - "background"
+      - "discussion"
+      - "conclusion"
+      - "summary"
+      - "abstract"
+      - "appendix"
+      - "appendices"
+      - "glossary" # Added to ensure glossary sections get larger chunks
+    chunk_size: 1536
+    overlap: 250
+
+# --- Default Fallback Configuration ---
+# Used for any section that does not match the adaptive rules above.
+default_chunking:
+  chunk_size: 1024
+  overlap: 200
+
+# --- LLM Model Configuration ---
+# V7.3 NEW SECTION
+llm_configs:
+  # Model used for the LLM-based JSON repair fallback step.
+  # Should be fast and cost-effective to minimize cost of repair operations.
+  repair_model_name: "gemini-1.5-flash-latest"
+
+# ... other configurations ...
+
+validation_rules:
+  completeness_threshold: 0.95 # Require 95% of source text to be present in chunks

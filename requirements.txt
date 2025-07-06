@@ -1,0 +1,12 @@
+python-dotenv
+pinecone
+neo4j
+google-generativeai
+nltk
+pydantic
+PyMuPDF
+PyYAML
+langchain_text_splitters
+tqdm
+json-repair
+# Add other libraries like pandas, unstructured, etc., as you need them
